@@ -72,7 +72,10 @@ static void test_parse_number() {
     TEST_NUMBER(0.0, "1e-10000"); /* must underflow */
 
     TEST_NUMBER(1.7976931348623157E+308, "1.7976931348623157E+308");  // Max. Double
+    TEST_NUMBER(-1.7976931348623157e+308, "-1.7976931348623157e+308");
     TEST_NUMBER(4.9406564584124654E-324, "4.9406564584124654E-324");  // Min. subnormal positive double
+    TEST_NUMBER(-4.9406564584124654e-324, "-4.9406564584124654e-324");
+    TEST_NUMBER(1.0000000000000002, "1.0000000000000002"); /* the smallest number > 1 */
 }
 
 #define TEST_ERROR(error, json)\
