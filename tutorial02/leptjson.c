@@ -1,8 +1,11 @@
 #include "leptjson.h"
 #include <assert.h>  /* assert() */
 #include <stdlib.h>  /* NULL, strtod() */
+#include <math.h>  /*HUGE_VALF, HUGE_VAL, HUGE_VALL*/
 
 #define EXPECT(c, ch)       do { assert(*c->json == (ch)); c->json++; } while(0)
+#define ISDIGIT(ch)         ((ch) >= '0' && (ch) <= '9')
+#define ISDIGIT1TO9(ch)     ((ch) >= '1' && (ch) <= '9')
 
 typedef struct {
     const char* json;
@@ -45,9 +48,41 @@ static int lept_parse_null(lept_context* c, lept_value* v) {
 static int lept_parse_number(lept_context* c, lept_value* v) {
     char* end;
     /* \TODO validate number */
-    v->n = strtod(c->json, &end);
-    if (c->json == end)
+    
+    int i = 0;
+    if (c->json[i] == '-') i++;
+    if (!ISDIGIT(c->json[i])) return LEPT_PARSE_INVALID_VALUE;
+
+    if (c->json[i] == '0') {
+        i++;
+        if (c->json[i] != '.' && c->json[i] != 'e' && c->json[i] != 'E'
+            && c->json[i] != ' ' && c->json[i] != '\t' && c->json[i] != '\n' && c->json[i] != '\r'
+            && c->json[i] != NULL)
+            return LEPT_PARSE_ROOT_NOT_SINGULAR;
+    }
+    while (ISDIGIT(c->json[i])) i++;
+
+    if (c->json[i] == '.') {
+        i++;
+        if (!ISDIGIT(c->json[i])) return LEPT_PARSE_INVALID_VALUE;
+        while (ISDIGIT(c->json[i])) i++;
+    }
+
+    if (c->json[i] == 'e' || c->json[i] == 'E') {
+        i++;
+        if (c->json[i] == '+' || c->json[i] == '-') i++;
+        if (!ISDIGIT(c->json[i])) return LEPT_PARSE_INVALID_VALUE;
+        while (ISDIGIT(c->json[i])) i++;
+    }
+    
+    if (c->json[i] != NULL && c->json[i] != ' ' && c->json[i] != '\t' && c->json[i] != '\n' && c->json[i] != '\r') 
         return LEPT_PARSE_INVALID_VALUE;
+
+    v->n = strtod(c->json, &end);
+    if (v->n == HUGE_VALF || v->n == HUGE_VAL || v->n == HUGE_VALL)
+        return LEPT_PARSE_NUMBER_TOO_BIG;
+    // if (c->json == end)
+        // return LEPT_PARSE_INVALID_VALUE;
     c->json = end;
     v->type = LEPT_NUMBER;
     return LEPT_PARSE_OK;
