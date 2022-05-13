@@ -107,9 +107,9 @@ static void test_parse_number() {
 // confusing
 static void test_parse_string() {
     TEST_STRING("", "\"\"");
-    TEST_STRING("Hello", "\"Hello\"");
+    TEST_STRING("Hello", "\"Hello\"");  //
 #if 1
-    TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");
+    TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");  // \\ is a C char
     TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
 #endif
 }
@@ -174,7 +174,7 @@ static void test_parse_invalid_string_escape() {
 
 static void test_parse_invalid_string_char() {
 #if 1
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x01\"");
+    TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x01\"");  // \x01 is a C char
     TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x1F\"");
 #endif
 }
