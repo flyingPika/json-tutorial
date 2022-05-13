@@ -87,7 +87,7 @@ static int lept_parse_number(lept_context* c, lept_value* v) {
 }
 
 static int lept_parse_string(lept_context* c, lept_value* v) {
-    size_t head = c->top, len;
+    size_t head = c->top, len;  // so strange
     const char* p;
     EXPECT(c, '\"');
     p = c->json;
@@ -100,8 +100,43 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
                 c->json = p;
                 return LEPT_PARSE_OK;
             case '\0':
-                c->top = head;
+                c->top = head;  // parsing failed
                 return LEPT_PARSE_MISS_QUOTATION_MARK;
+            case '\\':
+            {
+                char _ch = *p++;
+                switch (_ch) {
+                    case '"':
+                        PUTC(c, '\"');
+                        break;
+                    case '\\':
+                        PUTC(c, '\\');
+                        break;
+                    case '/':
+                        PUTC(c, '\/');
+                        break;
+                    case 'b':
+                        PUTC(c, '\b');
+                        break;
+                    case 'f':
+                        PUTC(c, '\f');
+                        break;
+                    case 'n':
+                        PUTC(c, '\n');
+                        break;
+                    case 'r':
+                        PUTC(c, '\r');
+                        break;
+                    case 't':
+                        PUTC(c, '\t');
+                        break;
+                    default:
+                        PUTC(c, '\\');
+                        PUTC(c, _ch);
+                        break;
+                }
+                break;
+            }
             default:
                 PUTC(c, ch);
         }
@@ -154,11 +189,12 @@ lept_type lept_get_type(const lept_value* v) {
 
 int lept_get_boolean(const lept_value* v) {
     /* \TODO */
-    return 0;
+    return (v->type == LEPT_TRUE) ? 1 : 0;
 }
 
 void lept_set_boolean(lept_value* v, int b) {
     /* \TODO */
+    v->type = b ? LEPT_TRUE : LEPT_FALSE;
 }
 
 double lept_get_number(const lept_value* v) {
@@ -168,6 +204,8 @@ double lept_get_number(const lept_value* v) {
 
 void lept_set_number(lept_value* v, double n) {
     /* \TODO */
+    v->type = LEPT_NUMBER;
+    v->u.n = n;
 }
 
 const char* lept_get_string(const lept_value* v) {
